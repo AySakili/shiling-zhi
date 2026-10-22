@@ -95,8 +95,10 @@ class Inserter:
         self.doc = doc
         self.cursor = cursor
 
-    def para(self, text="", size=12, bold=False, indent=True, align=None,
+    def para(self, text="", size=12, bold=False, indent=True, align=WD_ALIGN_PARAGRAPH.LEFT,
              space_after=6, color=None, line=1.5):
+        '''正文段落：默认左对齐——中文两端对齐遇到 IntersectionObserver 这类超长英文单词时，
+        行内字距会被拉得很开，左对齐更稳妥'''
         p = new_paragraph_after(self.cursor)
         pf = p.paragraph_format
         pf.space_after = Pt(space_after)
@@ -178,7 +180,8 @@ class Inserter:
         self.cursor = spacer
         return t
 
-    def picture(self, filename, caption, width_cm=15.2):
+    def picture(self, filename, caption, width_cm=14.6):
+        # 模板页边距 3.175cm×2，A4 正文宽度约 14.65cm，图宽取 14.6cm 刚好不出血
         path = os.path.join(SHOTS, filename)
         p = new_paragraph_after(self.cursor)
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -536,6 +539,8 @@ router.beforeEach((to) => {
     ins.picture("05-about.png", "图 5　关于本站：技术栈与知识点—文件对照表")
     ins.picture("06-notfound.png", "图 6　404 页面：通配符路由与随机推荐")
     ins.picture("07-wheel.png", "图 7　二十四节气圆盘特写（24 个节气按三角函数均匀分布）")
+    ins.picture("08-live-home.png",
+                "图 8　公网实测：在部署好的 https://aysakili.github.io/shiling-zhi/ 上抓取的首页")
 
     ins.heading2("5.2 功能验证")
     checks = [
@@ -548,6 +553,8 @@ router.beforeEach((to) => {
         '''生成 404.html → 发布"全部成功，公网地址可正常访问。''',
         '''交互验证：收藏在首页与图鉴页之间同步；主题切换后刷新仍然保持；筛选条件在跳转详情页再'''
         '''返回后依然保留（KeepAlive 生效）；倒计时每秒更新。''',
+        '''线上复验：部署完成后又用无头浏览器访问公网地址抓取渲染结果，并据此发现并修复了'''
+        '''v-reveal 指令在个别环境下首屏内容不显示的问题（见第六部分第 10 条）。''',
     ]
     for i, c in enumerate(checks, 1):
         ins.numbered(i, c)
@@ -598,6 +605,15 @@ router.beforeEach((to) => {
          '''甚至在组件销毁后仍然修改已不存在的状态。''',
          '''统一在 onUnmounted 中清理：clearInterval、removeEventListener、observer.disconnect()；'''
          '''组合式函数 useCountdown 内部自己完成清理，做到"谁申请、谁释放"。'''),
+        ("首屏内容一度是空白的：v-reveal 过度依赖 IntersectionObserver",
+         '''自定义指令 v-reveal 的初始状态是 opacity: 0，靠 IntersectionObserver 在元素进入视口时'''
+         '''再加上 is-visible 类。本地看没问题，但部署上线后用无头浏览器在较短等待时间下截图，'''
+         '''发现首屏只有背景色块、文字和按钮全部不可见——观察器回调还没触发，内容就一直是透明的。'''
+         '''这提醒我：把"内容可见"这件事交给一个异步回调，是有风险的。''',
+         '''给指令加了三层兜底：① 不支持 IntersectionObserver 的环境直接显示；'''
+         '''② 挂载时先用 getBoundingClientRect 判断元素是否已经在视口里，是则立即显示，'''
+         '''不再等回调（首屏因此也更快出现）；③ 再加一个 3 秒的定时兜底，只要元素确实落在视口'''
+         '''范围内就显示。宁可少一个动画，也不能让内容看不见。'''),
         ("同一元素上写了两个同名自定义指令",
          '''演示 v-highlight 的参数与修饰符时，本想在一个元素上同时写两次 v-highlight，结果编译报错。''',
          '''Vue 中一个元素上同名指令只能出现一次。改成两个元素分别演示不同写法，顺便把差异展示得更清楚。'''),
