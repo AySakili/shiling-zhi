@@ -1,0 +1,18 @@
+# Netlify 部署配置：构建命令 + 发布目录 + SPA 路由回退
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# 前端路由（history 模式）刷新 404 的经典解法：所有路径都回退到 index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

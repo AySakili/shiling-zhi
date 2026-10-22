@@ -1,0 +1,27 @@
+{
+  "name": "shiling-zhi",
+  "private": true,
+  "version": "1.0.0",
+  "description": "时令志 · 二十四节气 —— Vue 3 单页应用（Vue 教程知识点综合实践）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "netlify deploy --prod --dir=dist"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "dependencies": {
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "vite": "^8.3.5"
+  }
+}
